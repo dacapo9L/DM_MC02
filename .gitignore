@@ -1,0 +1,7 @@
+*.log
+build/
+*.sh
+Tools/
+Examples/
+.idea/
+.settings/
