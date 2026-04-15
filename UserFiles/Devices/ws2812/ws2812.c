@@ -65,15 +65,9 @@ void WS2812_Set_Color(Struct_WS2812_Color color, float brightness) {
   ws2812_color.Blue = (uint8_t)((float)color.Blue * scale);
 }
 
-bool WS2812_Close(void) {
-  ws2812_color.Red = 0U;
-  ws2812_color.Green = 0U;
-  ws2812_color.Blue = 0U;
-  return true;
-}
-
-void WS2812_TIM_10ms_Write_PeriodElapsedCallback(void) {
-  if (ws2812_spi_manage_object == NULL || ws2812_spi_manage_object->SPI_Handler == NULL) {
+void WS2812_Write_Callback(void) {
+  if (ws2812_spi_manage_object == NULL ||
+      ws2812_spi_manage_object->SPI_Handler == NULL) {
     return;
   }
 
@@ -81,14 +75,17 @@ void WS2812_TIM_10ms_Write_PeriodElapsedCallback(void) {
   memset(tmp_buffer, 0, SPI_BUFFER_SIZE);
 
   for (uint8_t i = 0U; i < 8U; i++) {
-    tmp_buffer[7U - i] =
-        (ws2812_color.Green & (uint8_t)(1U << i)) ? WS2812_LEVEL_1 : WS2812_LEVEL_0;
-    tmp_buffer[15U - i] =
-        (ws2812_color.Red & (uint8_t)(1U << i)) ? WS2812_LEVEL_1 : WS2812_LEVEL_0;
-    tmp_buffer[23U - i] =
-        (ws2812_color.Blue & (uint8_t)(1U << i)) ? WS2812_LEVEL_1 : WS2812_LEVEL_0;
+    tmp_buffer[7U - i] = (ws2812_color.Green & (uint8_t)(1U << i))
+                             ? WS2812_LEVEL_1
+                             : WS2812_LEVEL_0;
+    tmp_buffer[15U - i] = (ws2812_color.Red & (uint8_t)(1U << i))
+                              ? WS2812_LEVEL_1
+                              : WS2812_LEVEL_0;
+    tmp_buffer[23U - i] = (ws2812_color.Blue & (uint8_t)(1U << i))
+                              ? WS2812_LEVEL_1
+                              : WS2812_LEVEL_0;
   }
 
-  SPI_Transmit_Data(ws2812_spi_manage_object->SPI_Handler, NULL, 0U, GPIO_PIN_SET,
-                    WS2812_FRAME_BYTES);
+  SPI_Transmit_Data(ws2812_spi_manage_object->SPI_Handler, NULL, 0U,
+                    GPIO_PIN_SET, WS2812_FRAME_BYTES);
 }

@@ -27,8 +27,7 @@ void WS2812_Set_Green(uint8_t green);
 void WS2812_Set_Blue(uint8_t blue);
 void WS2812_Set_RGB(uint8_t red, uint8_t green, uint8_t blue);
 void WS2812_Set_Color(Struct_WS2812_Color color, float brightness);
-bool WS2812_Close(void);
 
-void WS2812_TIM_10ms_Write_PeriodElapsedCallback(void);
+void WS2812_Write_Callback(void);
 
 #endif // WS2812_H

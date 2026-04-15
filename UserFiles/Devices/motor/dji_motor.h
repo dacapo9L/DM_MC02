@@ -2,8 +2,8 @@
 #define DVC_MOTOR_DJI_H
 
 #include "bsp_can.h"
-#include "pid.h"
 #include "main.h"
+#include "pid.h"
 #include <stdint.h>
 
 // 一圈编码器刻度

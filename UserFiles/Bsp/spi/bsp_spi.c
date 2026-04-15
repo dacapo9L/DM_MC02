@@ -1,12 +1,16 @@
 #include "bsp_spi.h"
 #include "bsp_dwt.h"
+#include <string.h>
 
-Struct_SPI_Manage_Object SPI1_Manage_Object = {0};
-Struct_SPI_Manage_Object SPI2_Manage_Object = {0};
-Struct_SPI_Manage_Object SPI3_Manage_Object = {0};
-Struct_SPI_Manage_Object SPI4_Manage_Object = {0};
-Struct_SPI_Manage_Object SPI5_Manage_Object = {0};
-Struct_SPI_Manage_Object SPI6_Manage_Object = {0};
+/* DMA1/DMA2 cannot access DTCMRAM on STM32H7, place SPI buffers in AXI SRAM */
+#define SPI_DMA_BUFFER_ATTR __attribute__((section(".dma_buffer")))
+
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI1_Manage_Object;
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI2_Manage_Object;
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI3_Manage_Object;
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI4_Manage_Object;
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI5_Manage_Object;
+SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI6_Manage_Object;
 
 static Struct_SPI_Manage_Object *
 SPI_Get_Manage_Object(SPI_HandleTypeDef *hspi) {
@@ -63,6 +67,7 @@ void SPI_Init(SPI_HandleTypeDef *hspi, SPI_Callback Callback_Function) {
     return;
   }
 
+  memset(obj, 0, sizeof(*obj));
   obj->SPI_Handler = hspi;
   obj->Callback_Function = Callback_Function;
 }
@@ -71,6 +76,7 @@ uint8_t SPI_Transmit_Data(SPI_HandleTypeDef *hspi, GPIO_TypeDef *GPIOx,
                           uint16_t GPIO_Pin, GPIO_PinState Activate_Level,
                           uint16_t Tx_Length) {
   Struct_SPI_Manage_Object *obj = SPI_Get_Manage_Object(hspi);
+  uint8_t status;
   if (obj == NULL) {
     return HAL_ERROR;
   }
@@ -84,11 +90,17 @@ uint8_t SPI_Transmit_Data(SPI_HandleTypeDef *hspi, GPIO_TypeDef *GPIOx,
   SPI_Set_CS(obj, Activate_Level);
 
   if (hspi->Instance == SPI6) {
-    // SPI6使用阻塞传输
-    return (uint8_t)HAL_SPI_Transmit(hspi, obj->Tx_Buffer, Tx_Length, 1);
+    status = (uint8_t)HAL_SPI_Transmit(hspi, obj->Tx_Buffer, Tx_Length, 1);
+  } else {
+    status = (uint8_t)HAL_SPI_Transmit_DMA(hspi, obj->Tx_Buffer, Tx_Length);
   }
 
-  return (uint8_t)HAL_SPI_Transmit_DMA(hspi, obj->Tx_Buffer, Tx_Length);
+  if (status != HAL_OK) {
+    SPI_Deactivate_CS(obj);
+    obj->Activate_GPIOx = NULL;
+  }
+
+  return status;
 }
 
 uint8_t SPI_Transmit_Receive_Data(SPI_HandleTypeDef *hspi, GPIO_TypeDef *GPIOx,
@@ -96,6 +108,7 @@ uint8_t SPI_Transmit_Receive_Data(SPI_HandleTypeDef *hspi, GPIO_TypeDef *GPIOx,
                                   GPIO_PinState Activate_Level,
                                   uint16_t Tx_Length, uint16_t Rx_Length) {
   Struct_SPI_Manage_Object *obj = SPI_Get_Manage_Object(hspi);
+  uint8_t status;
   if (obj == NULL) {
     return HAL_ERROR;
   }
@@ -109,12 +122,19 @@ uint8_t SPI_Transmit_Receive_Data(SPI_HandleTypeDef *hspi, GPIO_TypeDef *GPIOx,
   SPI_Set_CS(obj, Activate_Level);
 
   if (hspi->Instance == SPI6) {
-    return (uint8_t)HAL_SPI_TransmitReceive(
+    status = (uint8_t)HAL_SPI_TransmitReceive(
         hspi, obj->Tx_Buffer, obj->Rx_Buffer, Tx_Length + Rx_Length, 1);
+  } else {
+    status = (uint8_t)HAL_SPI_TransmitReceive_DMA(
+        hspi, obj->Tx_Buffer, obj->Rx_Buffer, Tx_Length + Rx_Length);
   }
 
-  return (uint8_t)HAL_SPI_TransmitReceive_DMA(
-      hspi, obj->Tx_Buffer, obj->Rx_Buffer, Tx_Length + Rx_Length);
+  if (status != HAL_OK) {
+    SPI_Deactivate_CS(obj);
+    obj->Activate_GPIOx = NULL;
+  }
+
+  return status;
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {

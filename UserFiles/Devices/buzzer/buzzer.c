@@ -11,7 +11,7 @@ void Buzzer_On(float frequency, float loudness) {
     frequency = 0;
     loudness = 0;
   }
-  if (frequency > 0.0f || loudness > 1.0f) {
+  if (frequency > 12000.0f || loudness > 1.0f) {
     frequency = 0;
     loudness = 0;
   }

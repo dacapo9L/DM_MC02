@@ -1,7 +1,7 @@
 #include "task_and_callback.h"
 
-// Global init-finished flag.
 static bool init_finished = false;
+static float a;
 
 void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
   if (Header == NULL || Buffer == NULL) {
@@ -24,17 +24,18 @@ void Task_Init(void) {
 
   Buzzer_Init();
   WS2812_Init();
+  BMI088_Init(55.0f, true);
 
   init_finished = true;
 
   if (init_finished) {
-    // Buzzer_On(880.000f, 0.8f);
+    Buzzer_On(880.000f, 0.8f);
     WS2812_Set_Color(WS2812_COLOR_GREEN, 0.15f);
-    WS2812_TIM_10ms_Write_PeriodElapsedCallback();
+    WS2812_Write_Callback();
   } else {
-    // Buzzer_On(392.000f, 0.8f);
+    Buzzer_On(392.000f, 0.8f);
     WS2812_Set_Color(WS2812_COLOR_RED, 0.15f);
-    WS2812_TIM_10ms_Write_PeriodElapsedCallback();
+    WS2812_Write_Callback();
   }
 
   HAL_TIM_Base_Start_IT(&htim4);
@@ -47,31 +48,47 @@ void Task_Init(void) {
 void Task3600s_Callback() {}
 
 void Task1s_Callback() {
-  static uint8_t buzzer_close_tick = 0;
-  buzzer_close_tick++;
-  if (buzzer_close_tick >= 1U) {
+  static uint8_t close_tick = 0;
+  close_tick++;
+  if (close_tick >= 1U) {
     Buzzer_Off();
-    WS2812_Close();
-    WS2812_TIM_10ms_Write_PeriodElapsedCallback();
-    buzzer_close_tick = 0U;
+    WS2812_Set_RGB(0, 0, 0);
+    WS2812_Write_Callback();
+    close_tick = 0U;
   }
+  a = BMI088_Get_Temperature_C();
 }
 
 void Task1ms_Callback() {
   static uint16_t alive_tick = 0;
+  static uint16_t heater_tick = 0;
 
   TIM_1ms_CAN_PeriodElapsedCallback();
+  BMI088_TIM_1ms_PeriodElapsedCallback();
 
   alive_tick++;
   if (alive_tick >= 100U) {
     alive_tick = 0U;
     DJI_Motor_TIM_100ms_Alive_PeriodElapsedCallback(NULL);
   }
+
+  heater_tick++;
+  if (heater_tick >= 128U) {
+    heater_tick = 0U;
+    BMI088_Heater_TIM_128ms_PeriodElapsedCallback();
+  }
 }
 
 void Task125us_Callback() {}
 
-void Task10us_Callback() {}
+void Task10us_Callback() { BMI088_TIM_10us_PeriodElapsedCallback(); }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+  if (!init_finished) {
+    return;
+  }
+  BMI088_EXTI_Callback(GPIO_Pin);
+}
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (!init_finished) {

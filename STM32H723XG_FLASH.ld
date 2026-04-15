@@ -230,6 +230,15 @@ SECTIONS
   PROVIDE( __bss_start = __tbss_start );
   PROVIDE( __bss_size = __bss_end - __bss_start );
 
+  /* DMA-accessible buffer section in AXI SRAM (DMA1/DMA2 cannot access DTCM) */
+  .dma_buffer (NOLOAD) :
+  {
+    . = ALIGN(4);
+    *(.dma_buffer)
+    *(.dma_buffer*)
+    . = ALIGN(4);
+  } >RAM_D1
+
   /* User_heap_stack section, used to check that there is enough RAM left */
   ._user_heap_stack (NOLOAD) :
   {
@@ -240,7 +249,6 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >DTCMRAM
-
 
 
   /* Remove information from the standard libraries */
