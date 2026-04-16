@@ -1,10 +1,5 @@
 #include "bmi088_heater.h"
-
 #include "bmi088.h"
-#include "pid.h"
-#include "tim.h"
-
-#include <math.h>
 
 #define BMI088_HEATER_TIM_HANDLE (&htim3)
 #define BMI088_HEATER_TIM_CHANNEL TIM_CHANNEL_4
@@ -22,19 +17,6 @@
 #define BMI088_HEATER_PID_MAXOUT 300.0f
 #define BMI088_HEATER_PID_I_LIMIT 500.0f
 #define BMI088_HEATER_PID_DT 0.128f
-
-typedef struct {
-  bool initialized;
-  bool enable;
-  bool preheat_finished;
-
-  float now_temperature_c;
-  float target_temperature_c;
-  float supply_voltage_v;
-
-  uint32_t output_compare;
-  PID_t pid;
-} BMI088_Heater_State_t;
 
 static BMI088_Heater_State_t s_heater = {0};
 

@@ -2,7 +2,6 @@
 #include "bsp_dwt.h"
 #include <string.h>
 
-/* DMA1/DMA2 cannot access DTCMRAM on STM32H7, place SPI buffers in AXI SRAM */
 #define SPI_DMA_BUFFER_ATTR __attribute__((section(".dma_buffer")))
 
 SPI_DMA_BUFFER_ATTR Struct_SPI_Manage_Object SPI1_Manage_Object;

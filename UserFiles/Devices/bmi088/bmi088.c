@@ -1,42 +1,10 @@
 #include "bmi088.h"
-
-#include "bmi088_accel.h"
-#include "bmi088_gyro.h"
-#include "bmi088_heater.h"
-#include "bsp_spi.h"
-#include "main.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
 #define BMI088_TRANSFER_TIMEOUT_TICK_10US 2U
 #define BMI088_TEMP_PERIOD_MS 128U
-
-typedef struct Struct_BMI088 {
-  Struct_SPI_Manage_Object *SPI_Manage_Object;
-  Struct_BMI088_Accel Accel;
-  Struct_BMI088_Gyro Gyro;
-
-  bool init_finished_flag;
-  bool calibration_enable;
-
-  bool accel_ready_flag;
-  bool gyro_ready_flag;
-  bool temp_ready_flag;
-
-  bool accel_transfering_flag;
-  bool gyro_transfering_flag;
-  bool temp_transfering_flag;
-
-  bool accel_update_flag;
-  bool gyro_update_flag;
-
-  uint32_t sched_10us_tick;
-  uint32_t accel_transfering_start_tick;
-  uint32_t gyro_transfering_start_tick;
-  uint32_t temp_transfering_start_tick;
-  uint8_t temp_1ms_counter;
-} Struct_BMI088;
 
 static Struct_BMI088 g_bmi088 = {0};
 

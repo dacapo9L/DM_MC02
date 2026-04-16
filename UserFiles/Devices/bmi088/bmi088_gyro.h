@@ -38,6 +38,11 @@ typedef struct Struct_BMI088_Gyro {
   float gyro_rads[3];
 } Struct_BMI088_Gyro;
 
+typedef struct Struct_BMI088_Gyro_Reg_Config {
+  uint8_t reg;
+  uint8_t val;
+} Struct_BMI088_Gyro_Reg_Config;
+
 void BMI088_Gyro_Init(Struct_BMI088_Gyro *gyro,
                       Struct_SPI_Manage_Object *spi_manage_object);
 bool BMI088_Gyro_Configure(Struct_BMI088_Gyro *gyro);

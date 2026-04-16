@@ -2,6 +2,7 @@
 #define TASK_AND_CALLBACK_H
 
 #include "bmi088.h"
+#include "bmi088_heater.h"
 #include "bsp_can.h"
 #include "bsp_usb.h"
 #include "buzzer.h"
@@ -10,7 +11,6 @@
 #include "main.h"
 #include "tim.h"
 #include "ws2812.h"
-#include "bmi088_heater.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

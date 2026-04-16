@@ -3,8 +3,10 @@
 
 #include "bsp_spi.h"
 #include "main.h"
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #define BMI088_ACCEL_READ_MASK 0x80U
 #define BMI088_ACCEL_SPI_RX_RESERVED 1U
@@ -40,6 +42,11 @@ typedef struct Struct_BMI088_Accel {
   float accel_mps2[3];
   float temperature_c;
 } Struct_BMI088_Accel;
+
+typedef struct Struct_BMI088_Accel_Reg_Config {
+  uint8_t reg;
+  uint8_t val;
+} Struct_BMI088_Accel_Reg_Config;
 
 void BMI088_Accel_Init(Struct_BMI088_Accel *accel,
                        Struct_SPI_Manage_Object *spi_manage_object);

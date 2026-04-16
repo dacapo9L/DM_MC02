@@ -72,6 +72,7 @@ void Task1ms_Callback() {
     DJI_Motor_TIM_100ms_Alive_PeriodElapsedCallback(NULL);
   }
 
+  BMI088_TIM_1ms_PeriodElapsedCallback();
   heater_tick++;
   if (heater_tick >= 128U) {
     heater_tick = 0U;

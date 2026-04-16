@@ -8,11 +8,6 @@
 #define BMI088_GYRO_RW_RETRY 20U
 #define BMI088_DEG_TO_RAD (3.14159265358979323846f / 180.0f)
 
-typedef struct Struct_BMI088_Gyro_Reg_Config {
-  uint8_t reg;
-  uint8_t val;
-} Struct_BMI088_Gyro_Reg_Config;
-
 static bool BMI088_Gyro_Read_Blocking(const Struct_BMI088_Gyro *gyro,
                                       uint8_t reg, uint8_t *data,
                                       uint16_t len) {

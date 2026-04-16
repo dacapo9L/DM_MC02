@@ -1,17 +1,9 @@
 #include "bmi088_accel.h"
 
-#include <math.h>
-#include <string.h>
-
 #define BMI088_GRAVITY_ACCELERATION 9.7883f
 #define BMI088_ACCEL_CHIP_ID_VALUE 0x1EU
 #define BMI088_ACCEL_INIT_RETRY 20U
 #define BMI088_ACCEL_RW_RETRY 20U
-
-typedef struct Struct_BMI088_Accel_Reg_Config {
-  uint8_t reg;
-  uint8_t val;
-} Struct_BMI088_Accel_Reg_Config;
 
 static bool BMI088_Accel_Read_Blocking(const Struct_BMI088_Accel *accel,
                                        uint8_t reg, uint8_t *data,
