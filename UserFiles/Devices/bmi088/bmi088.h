@@ -55,4 +55,7 @@ void BMI088_Get_Gyro_Raw(int16_t out_xyz[3]);
 void BMI088_Get_Accel_mps2(float out_xyz[3]);
 void BMI088_Get_Gyro_rads(float out_xyz[3]);
 
+bool BMI088_Get_Accel_Updated(void);
+bool BMI088_Get_Gyro_Updated(void);
+
 #endif

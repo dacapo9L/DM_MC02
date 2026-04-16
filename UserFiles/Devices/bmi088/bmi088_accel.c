@@ -111,7 +111,7 @@ void BMI088_Accel_Init(Struct_BMI088_Accel *accel,
   accel->CS_GPIO_Port = BMI088_ACCEL_CS_GPIO_Port;
   accel->CS_Pin = BMI088_ACCEL_CS_Pin;
   accel->Activate_Pin_State = GPIO_PIN_RESET;
-  accel->Range = BMI088_ACCEL_RANGE_24G;
+  accel->Range = BMI088_ACCEL_RANGE_6G;
   accel->valid_flag = false;
 }
 

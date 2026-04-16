@@ -242,7 +242,7 @@ void BMI088_SPI_RxCpltCallback(uint8_t *tx, uint8_t *rx, uint16_t tx_len,
     reg = (uint8_t)(tx[0] & (uint8_t)(~BMI088_ACCEL_READ_MASK));
     if (reg == BMI088_ACCEL_REG_ACC_X_LSB && rx_len == 6U) {
       g_bmi088.accel_transfering_flag = false;
-      g_bmi088.accel_ready_flag = true;
+      g_bmi088.accel_update_flag = true;
     } else if (reg == BMI088_ACCEL_REG_TEMP_MSB && rx_len == 2U) {
       g_bmi088.temp_transfering_flag = false;
     }
@@ -252,7 +252,7 @@ void BMI088_SPI_RxCpltCallback(uint8_t *tx, uint8_t *rx, uint16_t tx_len,
                  BMI088_GYRO_CS_Pin) {
     BMI088_Gyro_SPI_RxCpltCallback(&g_bmi088.Gyro, tx, rx, tx_len, rx_len);
     g_bmi088.gyro_transfering_flag = false;
-    g_bmi088.gyro_ready_flag = true;
+    g_bmi088.gyro_update_flag = true;
   }
 }
 
@@ -277,25 +277,49 @@ void BMI088_Get_Gyro_Raw(int16_t out_xyz[3]) {
 }
 
 void BMI088_Get_Accel_mps2(float out_xyz[3]) {
+  uint32_t primask;
   if (out_xyz == NULL) {
     return;
   }
 
+  primask = __get_PRIMASK();
+  __disable_irq();
   if (!g_bmi088.calibration_enable) {
     BMI088_Copy_Raw_Float(g_bmi088.Accel.accel_mps2, out_xyz);
   } else {
     BMI088_Apply_Accel_Calibration(g_bmi088.Accel.accel_mps2, out_xyz);
   }
+  __set_PRIMASK(primask);
 }
 
 void BMI088_Get_Gyro_rads(float out_xyz[3]) {
+  uint32_t primask;
   if (out_xyz == NULL) {
     return;
   }
 
+  primask = __get_PRIMASK();
+  __disable_irq();
   if (!g_bmi088.calibration_enable) {
     BMI088_Copy_Raw_Float(g_bmi088.Gyro.gyro_rads, out_xyz);
   } else {
     BMI088_Apply_Gyro_Calibration(g_bmi088.Gyro.gyro_rads, out_xyz);
   }
+  __set_PRIMASK(primask);
+}
+
+bool BMI088_Get_Accel_Updated(void) {
+  if (g_bmi088.accel_update_flag) {
+    g_bmi088.accel_update_flag = false;
+    return true;
+  }
+  return false;
+}
+
+bool BMI088_Get_Gyro_Updated(void) {
+  if (g_bmi088.gyro_update_flag) {
+    g_bmi088.gyro_update_flag = false;
+    return true;
+  }
+  return false;
 }

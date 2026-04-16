@@ -1,7 +1,8 @@
 #include "task_and_callback.h"
 
 static bool init_finished = false;
-static float a;
+static float a[3];
+float dt = 0.0f;
 
 void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
   if (Header == NULL || Buffer == NULL) {
@@ -21,10 +22,12 @@ void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
 void Task_Init(void) {
   CAN_Init(&hfdcan1, CAN1_Callback);
   USB_Init(NULL);
+  DWT_Init(480);
+  INS_Init();
 
   Buzzer_Init();
   WS2812_Init();
-  BMI088_Init(55.0f, true);
+  BMI088_Init(65.0f, true);
 
   init_finished = true;
 
@@ -56,7 +59,6 @@ void Task1s_Callback() {
     WS2812_Write_Callback();
     close_tick = 0U;
   }
-  a = BMI088_Get_Temperature_C();
 }
 
 void Task1ms_Callback() {
@@ -64,7 +66,6 @@ void Task1ms_Callback() {
   static uint16_t heater_tick = 0;
 
   TIM_1ms_CAN_PeriodElapsedCallback();
-  BMI088_TIM_1ms_PeriodElapsedCallback();
 
   alive_tick++;
   if (alive_tick >= 100U) {
@@ -76,8 +77,10 @@ void Task1ms_Callback() {
   heater_tick++;
   if (heater_tick >= 128U) {
     heater_tick = 0U;
-    BMI088_Heater_TIM_128ms_PeriodElapsedCallback();
+    // BMI088_Heater_TIM_128ms_PeriodElapsedCallback();
   }
+
+  INS_getYawPitchRoll(a);
 }
 
 void Task125us_Callback() {}
