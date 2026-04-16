@@ -6,13 +6,13 @@
 #define M_PI 3.14159265358979323846f
 #endif
 
-float Kp = 0.5f;
+float Kp = 0.8f;
 float Ki = 0.01f;
 
 // 二阶Butterworth滤波器系数（根据截止频率和采样频率计算）
-// 计算公式：wc = 2*pi*fc/fs
+// 计算公式：wc = tan(pi*fc/fs), K = wc^2 + sqrt(2)*wc + 1
 // 如需修改截止频率，需要重新计算系数
-// fs = 1000Hz, fc = 50Hz (根据实际解算频率计算)
+// fs = 1000Hz, fc = 50Hz
 #define FILTER_B0 0.020083f
 #define FILTER_B1 0.040167f
 #define FILTER_B2 0.020083f
@@ -56,37 +56,42 @@ static float TTangles_gyro[7]; // 传感器原始数据
 static float gyroomega[3] = {0};
 static float rawgyro[3] = {0};
 
-// 滤波器状态变量（每个轴都需要两个延迟单元）
+// 滤波器状态变量（每个轴需要4个状态：x[n-1], x[n-2], y[n-1], y[n-2]）
 // 加速度计滤波器状态
-static float accel_x_state[2] = {0.0f, 0.0f};
-static float accel_y_state[2] = {0.0f, 0.0f};
-static float accel_z_state[2] = {0.0f, 0.0f};
+static float accel_x_state[4] = {0};
+static float accel_y_state[4] = {0};
+static float accel_z_state[4] = {0};
 
 // 陀螺仪滤波器状态
-static float gyro_x_state[2] = {0.0f, 0.0f};
-static float gyro_y_state[2] = {0.0f, 0.0f};
-static float gyro_z_state[2] = {0.0f, 0.0f};
+static float gyro_x_state[4] = {0};
+static float gyro_y_state[4] = {0};
+static float gyro_z_state[4] = {0};
 
 /**
  * @brief 二阶低通Butterworth滤波器实现
  * @details 使用差分方程进行滤波：y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] -
  * a1*y[n-1] - a2*y[n-2]
  * @param[in] input 输入信号值
- * @param[in,out] state 指向状态数组的指针，用于存储延迟单元
- *                      state[0] = y[n-1]，state[1] = y[n-2]
+ * @param[in,out] state 指向状态数组的指针（4个元素）
+ *                      state[0] = x[n-1]，state[1] = x[n-2]
+ *                      state[2] = y[n-1]，state[3] = y[n-2]
  * @return 滤波后的输出值
- * @note 截止频率30Hz，采样频率200Hz
+ * @note fs = 1000Hz, fc = 50Hz
  */
 static float butterworth_filter(float input, float *state) {
   float output;
 
-  // 计算输出
+  // y[n] = b0*x[n] + b1*x[n-1] + b2*x[n-2] - a1*y[n-1] - a2*y[n-2]
   output = FILTER_B0 * input + FILTER_B1 * state[0] + FILTER_B2 * state[1] -
-           FILTER_A1 * state[0] - FILTER_A2 * state[1];
+           FILTER_A1 * state[2] - FILTER_A2 * state[3];
 
-  // 更新状态（延迟单元）
-  state[1] = state[0];
-  state[0] = output;
+  // 更新输入历史
+  state[1] = state[0]; // x[n-2] = x[n-1]
+  state[0] = input;    // x[n-1] = x[n]
+
+  // 更新输出历史
+  state[3] = state[2]; // y[n-2] = y[n-1]
+  state[2] = output;   // y[n-1] = y[n]
 
   return output;
 }
@@ -199,12 +204,12 @@ void INS_Init(void) {
   }
 
   // 初始化滤波器状态
-  accel_x_state[0] = accel_x_state[1] = 0.0f;
-  accel_y_state[0] = accel_y_state[1] = 0.0f;
-  accel_z_state[0] = accel_z_state[1] = 0.0f;
-  gyro_x_state[0] = gyro_x_state[1] = 0.0f;
-  gyro_y_state[0] = gyro_y_state[1] = 0.0f;
-  gyro_z_state[0] = gyro_z_state[1] = 0.0f;
+  accel_x_state[0] = accel_x_state[1] = accel_x_state[2] = accel_x_state[3] = 0.0f;
+  accel_y_state[0] = accel_y_state[1] = accel_y_state[2] = accel_y_state[3] = 0.0f;
+  accel_z_state[0] = accel_z_state[1] = accel_z_state[2] = accel_z_state[3] = 0.0f;
+  gyro_x_state[0] = gyro_x_state[1] = gyro_x_state[2] = gyro_x_state[3] = 0.0f;
+  gyro_y_state[0] = gyro_y_state[1] = gyro_y_state[2] = gyro_y_state[3] = 0.0f;
+  gyro_z_state[0] = gyro_z_state[1] = gyro_z_state[2] = gyro_z_state[3] = 0.0f;
 
   // 初始化累计角度
   yaw_total_angle = 0.0f;
@@ -225,24 +230,26 @@ void INS_Init(void) {
  * @note 此函数包含陀螺仪自动校准逻辑，校准完成后积分项会被重置
  */
 void INS_getValues(float *values) {
-  int16_t accel_data[3];
-  int16_t gyro_data[3];
+  int16_t tmp_accel_data[3];
+  int16_t tmp_gyro_data[3];
+  float accel_data[3];
+  float gyro_data[3];
   float sqrResult_gyro[3];
   float avgResult_gyro[3];
 
-  BMI088_Get_Accel_Raw(accel_data);
-  BMI088_Get_Gyro_Raw(gyro_data);
+  BMI088_Get_Accel_Raw(tmp_accel_data);
+  BMI088_Get_Gyro_Raw(tmp_gyro_data);
 
   if (BMI088_Get_Accel_Valid() && BMI088_Get_Gyro_Valid()) {
     // 转换加速度计数据 (6g量程)
-    accel_data[0] = accel_data[0] * BMI088_ACCEL_6G_SEN;
-    accel_data[1] = accel_data[1] * BMI088_ACCEL_6G_SEN;
-    accel_data[2] = accel_data[2] * BMI088_ACCEL_6G_SEN;
+    accel_data[0] = tmp_accel_data[0] * BMI088_ACCEL_6G_SEN;
+    accel_data[1] = tmp_accel_data[1] * BMI088_ACCEL_6G_SEN;
+    accel_data[2] = tmp_accel_data[2] * BMI088_ACCEL_6G_SEN;
 
     // 转换陀螺仪数据到度/秒 (2000dps量程)
-    gyro_data[0] = gyro_data[0] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
-    gyro_data[1] = gyro_data[1] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
-    gyro_data[2] = gyro_data[2] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
+    gyro_data[0] = tmp_gyro_data[0] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
+    gyro_data[1] = tmp_gyro_data[1] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
+    gyro_data[2] = tmp_gyro_data[2] * BMI088_GYRO_2000_SEN * 180.0f / M_PI;
 
     // 保存未滤波的原始角速度数据
     rawgyro[0] = gyro_data[0];

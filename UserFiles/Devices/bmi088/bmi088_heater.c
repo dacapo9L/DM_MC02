@@ -77,7 +77,8 @@ void BMI088_Heater_Init(void) {
   PID_Reset(&s_heater.pid);
 
   HAL_TIM_PWM_Start(BMI088_HEATER_TIM_HANDLE, BMI088_HEATER_TIM_CHANNEL);
-  BMI088_Heater_Set_Compare(0U);
+  __HAL_TIM_SET_COMPARE(BMI088_HEATER_TIM_HANDLE, BMI088_HEATER_TIM_CHANNEL,
+                        0U);
 }
 
 void BMI088_Heater_Set_Enable(bool enable) {
@@ -90,31 +91,9 @@ void BMI088_Heater_Set_Enable(bool enable) {
   }
 }
 
-bool BMI088_Heater_Get_Enable(void) { return s_heater.enable; }
-
-void BMI088_Heater_Set_Target_Temperature_C(float target_c) {
+void BMI088_Heater_Set_Target_Temperature_C(float target_temperature_c) {
   s_heater.target_temperature_c =
-      BMI088_Heater_Clamp_Float(target_c, 20.0f, 80.0f);
-}
-
-float BMI088_Heater_Get_Target_Temperature_C(void) {
-  return s_heater.target_temperature_c;
-}
-
-float BMI088_Heater_Get_Now_Temperature_C(void) {
-  return s_heater.now_temperature_c;
-}
-
-void BMI088_Heater_Set_Supply_Voltage(float voltage_v) {
-  s_heater.supply_voltage_v = BMI088_Heater_Clamp_Float(voltage_v, 1.0f, 60.0f);
-}
-
-float BMI088_Heater_Get_Supply_Voltage(void) {
-  return s_heater.supply_voltage_v;
-}
-
-uint32_t BMI088_Heater_Get_Output_Compare(void) {
-  return s_heater.output_compare;
+      BMI088_Heater_Clamp_Float(target_temperature_c, 20.0f, 80.0f);
 }
 
 void BMI088_Heater_TIM_128ms_PeriodElapsedCallback(void) {

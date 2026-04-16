@@ -1,8 +1,6 @@
 #include "task_and_callback.h"
 
-static bool init_finished = false;
-static float a[3];
-float dt = 0.0f;
+bool init_finished = false;
 
 void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
   if (Header == NULL || Buffer == NULL) {
@@ -22,7 +20,6 @@ void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
 void Task_Init(void) {
   CAN_Init(&hfdcan1, CAN1_Callback);
   USB_Init(NULL);
-  DWT_Init(480);
   INS_Init();
 
   Buzzer_Init();
@@ -32,11 +29,11 @@ void Task_Init(void) {
   init_finished = true;
 
   if (init_finished) {
-    Buzzer_On(880.000f, 0.8f);
+    // Buzzer_On(880.000f, 0.8f);
     WS2812_Set_Color(WS2812_COLOR_GREEN, 0.15f);
     WS2812_Write_Callback();
   } else {
-    Buzzer_On(392.000f, 0.8f);
+    // Buzzer_On(392.000f, 0.8f);
     WS2812_Set_Color(WS2812_COLOR_RED, 0.15f);
     WS2812_Write_Callback();
   }
@@ -77,10 +74,8 @@ void Task1ms_Callback() {
   heater_tick++;
   if (heater_tick >= 128U) {
     heater_tick = 0U;
-    // BMI088_Heater_TIM_128ms_PeriodElapsedCallback();
+    BMI088_Heater_TIM_128ms_PeriodElapsedCallback();
   }
-
-  INS_getYawPitchRoll(a);
 }
 
 void Task125us_Callback() {}

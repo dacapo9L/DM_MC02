@@ -5,7 +5,6 @@
 #include "bsp_dwt.h"
 #include "main.h"
 
-
 #include <stdint.h>
 
 /**

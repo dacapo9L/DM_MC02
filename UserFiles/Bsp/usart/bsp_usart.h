@@ -1,23 +1,44 @@
-// #ifndef __BSP_UART_H
-// #define __BSP_UART_H
+#ifndef __BSP_UART_H
+#define __BSP_UART_H
 
-// #include "main.h"
-// #include "usart.h"
+#include "main.h"
+#include "usart.h"
+#include <stdbool.h>
 
-// extern volatile uint32_t g_uart1_irq_count;
-// extern volatile uint32_t g_uart1_process_count;
-// extern volatile uint16_t g_uart1_last_size;
+extern DMA_HandleTypeDef hdma_usart1_rx;
+extern DMA_HandleTypeDef hdma_usart1_tx;
+extern DMA_HandleTypeDef hdma_usart2_rx;
+extern DMA_HandleTypeDef hdma_usart2_tx;
+extern DMA_HandleTypeDef hdma_usart3_rx;
+extern DMA_HandleTypeDef hdma_usart3_tx;
+extern DMA_HandleTypeDef hdma_uart7_rx;
+extern DMA_HandleTypeDef hdma_uart7_tx;
+extern DMA_HandleTypeDef hdma_usart10_rx;
+extern DMA_HandleTypeDef hdma_usart10_tx;
 
-// extern volatile uint32_t g_uart1_init_count;
-// extern volatile uint32_t g_uart1_receive_start_count;
-// extern volatile uint32_t g_uart1_rxevent_count;
-// extern volatile uint32_t g_uart1_error_count;
+extern bool init_finished;
 
-// extern volatile uint32_t g_uart1_last_error_code;
-// extern volatile uint32_t g_uart1_last_receive_ret;
+typedef void (*USART_Callback)(UART_HandleTypeDef *USART_Handler,
+                               uint8_t *Buffer, uint16_t Length);
 
-// /** @brief UART接收数据缓冲区 */
-// extern uint8_t uart1data[100];
-// extern uint8_t uart6data[100];
+typedef struct Struct_USART_Manage_Object {
+  UART_HandleTypeDef *USART_Handler;
+  DMA_HandleTypeDef *DMA_Handler_Rx;
+  DMA_HandleTypeDef *DMA_Handler_Tx;
+  USART_Callback Callback_Function;
+  uint8_t Rx_Buffer[512];
+  uint8_t Tx_Buffer[64];
+  bool Rx_Complete_Flag;
+  uint8_t Rx_Data_Length;
+} Struct_USART_Manage_Object;
 
-// #endif
+extern Struct_USART_Manage_Object USART1_Manage_Object;
+extern Struct_USART_Manage_Object USART2_Manage_Object;
+extern Struct_USART_Manage_Object USART3_Manage_Object;
+extern Struct_USART_Manage_Object UART7_Manage_Object;
+extern Struct_USART_Manage_Object USART10_Manage_Object;
+
+void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function);
+void USART_Transmit_Data(Struct_USART_Manage_Object *USART_Manage_Object);
+
+#endif

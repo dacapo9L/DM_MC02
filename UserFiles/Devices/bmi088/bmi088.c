@@ -8,17 +8,6 @@
 
 static Struct_BMI088 g_bmi088 = {0};
 
-static const float BMI088_ACCEL_AFFINE_DATA[9] = {
-    0.9813826498493404f,    0.17232440504057203f, 0.027984325323801115f,
-    -0.1690535919907899f,   0.9747302115792275f,  -0.10336863799715153f,
-    -0.046825636945091266f, 0.09953521655990044f, 0.986897809387138f,
-};
-static const float BMI088_ACCEL_BIAS_DATA[3] = {
-    0.0038458286072392397f, 0.00647039594993548f, 0.014968990490337293f};
-static const float BMI088_GYRO_ZERO_OFFSET[3] = {
-    -0.005280993487f, -0.000237223741f, -0.000647540528f};
-static const float BMI088_GRAVITY_ACCELERATION = 9.7947f;
-
 static inline bool BMI088_Is_Timeout_Tick(uint32_t now_tick,
                                           uint32_t start_tick,
                                           uint32_t timeout_tick) {
@@ -36,49 +25,6 @@ static void BMI088_Copy_Raw_Int16(const int16_t in_xyz[3], int16_t out_xyz[3]) {
   out_xyz[0] = in_xyz[0];
   out_xyz[1] = in_xyz[1];
   out_xyz[2] = in_xyz[2];
-}
-
-static void BMI088_Copy_Raw_Float(const float in_xyz[3], float out_xyz[3]) {
-  if (out_xyz == NULL) {
-    return;
-  }
-  out_xyz[0] = in_xyz[0];
-  out_xyz[1] = in_xyz[1];
-  out_xyz[2] = in_xyz[2];
-}
-
-static void BMI088_Apply_Accel_Calibration(const float in_xyz[3],
-                                           float out_xyz[3]) {
-  float in_norm[3];
-  float calibrated[3];
-
-  in_norm[0] = in_xyz[0] / BMI088_GRAVITY_ACCELERATION;
-  in_norm[1] = in_xyz[1] / BMI088_GRAVITY_ACCELERATION;
-  in_norm[2] = in_xyz[2] / BMI088_GRAVITY_ACCELERATION;
-
-  calibrated[0] = BMI088_ACCEL_AFFINE_DATA[0] * in_norm[0] +
-                  BMI088_ACCEL_AFFINE_DATA[1] * in_norm[1] +
-                  BMI088_ACCEL_AFFINE_DATA[2] * in_norm[2] +
-                  BMI088_ACCEL_BIAS_DATA[0];
-  calibrated[1] = BMI088_ACCEL_AFFINE_DATA[3] * in_norm[0] +
-                  BMI088_ACCEL_AFFINE_DATA[4] * in_norm[1] +
-                  BMI088_ACCEL_AFFINE_DATA[5] * in_norm[2] +
-                  BMI088_ACCEL_BIAS_DATA[1];
-  calibrated[2] = BMI088_ACCEL_AFFINE_DATA[6] * in_norm[0] +
-                  BMI088_ACCEL_AFFINE_DATA[7] * in_norm[1] +
-                  BMI088_ACCEL_AFFINE_DATA[8] * in_norm[2] +
-                  BMI088_ACCEL_BIAS_DATA[2];
-
-  out_xyz[0] = calibrated[0] * BMI088_GRAVITY_ACCELERATION;
-  out_xyz[1] = calibrated[1] * BMI088_GRAVITY_ACCELERATION;
-  out_xyz[2] = calibrated[2] * BMI088_GRAVITY_ACCELERATION;
-}
-
-static void BMI088_Apply_Gyro_Calibration(const float in_xyz[3],
-                                          float out_xyz[3]) {
-  out_xyz[0] = in_xyz[0] + BMI088_GYRO_ZERO_OFFSET[0];
-  out_xyz[1] = in_xyz[1] + BMI088_GYRO_ZERO_OFFSET[1];
-  out_xyz[2] = in_xyz[2] + BMI088_GYRO_ZERO_OFFSET[2];
 }
 
 void BMI088_Init(float target_temperature_c, bool heater_enable) {
@@ -256,12 +202,6 @@ void BMI088_SPI_RxCpltCallback(uint8_t *tx, uint8_t *rx, uint16_t tx_len,
   }
 }
 
-void BMI088_Set_Calibration_Enable(bool enable) {
-  g_bmi088.calibration_enable = enable;
-}
-
-bool BMI088_Get_Calibration_Enable(void) { return g_bmi088.calibration_enable; }
-
 bool BMI088_Get_Accel_Valid(void) { return g_bmi088.Accel.valid_flag; }
 
 bool BMI088_Get_Gyro_Valid(void) { return g_bmi088.Gyro.valid_flag; }
@@ -277,35 +217,25 @@ void BMI088_Get_Gyro_Raw(int16_t out_xyz[3]) {
 }
 
 void BMI088_Get_Accel_mps2(float out_xyz[3]) {
-  uint32_t primask;
   if (out_xyz == NULL) {
     return;
   }
 
-  primask = __get_PRIMASK();
-  __disable_irq();
-  if (!g_bmi088.calibration_enable) {
-    BMI088_Copy_Raw_Float(g_bmi088.Accel.accel_mps2, out_xyz);
-  } else {
-    BMI088_Apply_Accel_Calibration(g_bmi088.Accel.accel_mps2, out_xyz);
-  }
-  __set_PRIMASK(primask);
+  // 6g量程
+  out_xyz[0] = out_xyz[0] * 0.00179443359375f;
+  out_xyz[1] = out_xyz[1] * 0.00179443359375f;
+  out_xyz[2] = out_xyz[2] * 0.00179443359375f;
 }
 
 void BMI088_Get_Gyro_rads(float out_xyz[3]) {
-  uint32_t primask;
   if (out_xyz == NULL) {
     return;
   }
 
-  primask = __get_PRIMASK();
-  __disable_irq();
-  if (!g_bmi088.calibration_enable) {
-    BMI088_Copy_Raw_Float(g_bmi088.Gyro.gyro_rads, out_xyz);
-  } else {
-    BMI088_Apply_Gyro_Calibration(g_bmi088.Gyro.gyro_rads, out_xyz);
-  }
-  __set_PRIMASK(primask);
+  // 2000dps量程
+  out_xyz[0] = out_xyz[0] * 0.00106526443603169529841533860381f * 180.0f / M_PI;
+  out_xyz[1] = out_xyz[1] * 0.00106526443603169529841533860381f * 180.0f / M_PI;
+  out_xyz[2] = out_xyz[2] * 0.00106526443603169529841533860381f * 180.0f / M_PI;
 }
 
 bool BMI088_Get_Accel_Updated(void) {
