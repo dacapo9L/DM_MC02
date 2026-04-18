@@ -5,15 +5,17 @@
 #include <string.h>
 
 #define UART_BUFFER_SIZE 512
+#define USART_DMA_BUFFER_ATTR __attribute__((section(".dma_buffer")))
 
-Struct_USART_Manage_Object USART1_Manage_Object = {NULL};
-Struct_USART_Manage_Object USART2_Manage_Object = {NULL};
-Struct_USART_Manage_Object USART3_Manage_Object = {NULL};
-Struct_USART_Manage_Object UART7_Manage_Object = {NULL};
-Struct_USART_Manage_Object USART10_Manage_Object = {NULL};
+USART_DMA_BUFFER_ATTR Struct_USART_Manage_Object USART1_Manage_Object;
+USART_DMA_BUFFER_ATTR Struct_USART_Manage_Object USART2_Manage_Object;
+USART_DMA_BUFFER_ATTR Struct_USART_Manage_Object USART3_Manage_Object;
+USART_DMA_BUFFER_ATTR Struct_USART_Manage_Object UART7_Manage_Object;
+USART_DMA_BUFFER_ATTR Struct_USART_Manage_Object USART10_Manage_Object;
 
 void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function) {
   if (huart->Instance == USART1) {
+    memset(&USART1_Manage_Object, 0, sizeof(USART1_Manage_Object));
     USART1_Manage_Object.USART_Handler = huart;
     USART1_Manage_Object.DMA_Handler_Rx = &hdma_usart1_rx;
     USART1_Manage_Object.DMA_Handler_Tx = &hdma_usart1_tx;
@@ -21,6 +23,7 @@ void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function) {
                                  UART_BUFFER_SIZE);
     USART1_Manage_Object.Callback_Function = Callback_Function;
   } else if (huart->Instance == USART2) {
+    memset(&USART2_Manage_Object, 0, sizeof(USART2_Manage_Object));
     USART2_Manage_Object.USART_Handler = huart;
     USART2_Manage_Object.DMA_Handler_Rx = &hdma_usart2_rx;
     USART2_Manage_Object.DMA_Handler_Tx = &hdma_usart2_tx;
@@ -28,6 +31,7 @@ void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function) {
                                  UART_BUFFER_SIZE);
     USART2_Manage_Object.Callback_Function = Callback_Function;
   } else if (huart->Instance == USART3) {
+    memset(&USART3_Manage_Object, 0, sizeof(USART3_Manage_Object));
     USART3_Manage_Object.USART_Handler = huart;
     USART3_Manage_Object.DMA_Handler_Rx = &hdma_usart3_rx;
     USART3_Manage_Object.DMA_Handler_Tx = &hdma_usart3_tx;
@@ -35,6 +39,7 @@ void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function) {
                                  UART_BUFFER_SIZE);
     USART3_Manage_Object.Callback_Function = Callback_Function;
   } else if (huart->Instance == UART7) {
+    memset(&UART7_Manage_Object, 0, sizeof(UART7_Manage_Object));
     UART7_Manage_Object.USART_Handler = huart;
     UART7_Manage_Object.DMA_Handler_Rx = &hdma_uart7_rx;
     UART7_Manage_Object.DMA_Handler_Tx = &hdma_uart7_tx;
@@ -42,6 +47,7 @@ void USART_Init(UART_HandleTypeDef *huart, USART_Callback Callback_Function) {
                                  UART_BUFFER_SIZE);
     UART7_Manage_Object.Callback_Function = Callback_Function;
   } else if (huart->Instance == USART10) {
+    memset(&USART10_Manage_Object, 0, sizeof(USART10_Manage_Object));
     USART10_Manage_Object.USART_Handler = huart;
     USART10_Manage_Object.DMA_Handler_Rx = &hdma_usart10_rx;
     USART10_Manage_Object.DMA_Handler_Tx = &hdma_usart10_tx;

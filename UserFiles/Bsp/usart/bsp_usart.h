@@ -27,7 +27,7 @@ typedef struct Struct_USART_Manage_Object {
   DMA_HandleTypeDef *DMA_Handler_Tx;
   USART_Callback Callback_Function;
   uint8_t Rx_Buffer[512];
-  uint8_t Tx_Buffer[64];
+  uint8_t Tx_Buffer[512];
   bool Rx_Complete_Flag;
   uint8_t Rx_Data_Length;
 } Struct_USART_Manage_Object;

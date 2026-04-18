@@ -232,7 +232,7 @@ void ZDT_Stepper_Control(Struct_ZDT_StepperMotor *motor, uint8_t func,
     motor->tx_data[0][2] = (uint8_t)(snf ? 1U : 0U);
     motor->tx_data[0][3] = 0x6B;
     break;
-  case READ_SYS_PARAMS: 
+  case READ_SYS_PARAMS:
     if (motor == NULL) {
       return;
     }
@@ -296,6 +296,4 @@ void ZDT_Stepper_TIM_Calculate_PeriodElapsedCallback(
     for_each_registered_motor(ZDT_Stepper_TIM_Calculate_PeriodElapsedCallback);
     return;
   }
-
-  ZDT_Stepper_Control(motor, STOP_NOW, 1);
 }

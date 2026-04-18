@@ -1,4 +1,5 @@
 #include "task_and_callback.h"
+#include <string.h>
 
 bool init_finished = false;
 
@@ -54,9 +55,34 @@ void CAN2_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
   }
 }
 
+void USART1_Callback(UART_HandleTypeDef *huart, uint8_t *Buffer, uint16_t Size) {
+  uint16_t tx_len;
+
+  if (huart == NULL || Buffer == NULL) {
+    return;
+  }
+  if (!init_finished) {
+    return;
+  }
+  if (Size == 0U || USART1_Manage_Object.USART_Handler == NULL) {
+    return;
+  }
+
+  tx_len = Size;
+  if (tx_len > (uint16_t)sizeof(USART1_Manage_Object.Tx_Buffer)) {
+    tx_len = (uint16_t)sizeof(USART1_Manage_Object.Tx_Buffer);
+  }
+
+  memcpy(USART1_Manage_Object.Tx_Buffer, Buffer, tx_len);
+  HAL_UART_Transmit_DMA(USART1_Manage_Object.USART_Handler,
+                        USART1_Manage_Object.Tx_Buffer, tx_len);
+}
+
 void Task_Init(void) {
   CAN_Init(&hfdcan1, false, CAN1_Callback);
   CAN_Init(&hfdcan2, true, CAN2_Callback);
+
+  USART_Init(&huart1, USART1_Callback);
 
   USB_Init(NULL);
   INS_Init();
