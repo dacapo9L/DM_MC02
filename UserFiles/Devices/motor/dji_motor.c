@@ -2,7 +2,6 @@
 #include <stddef.h>
 #include <string.h>
 
-Struct_Motor_DJI_CAN_Rx_Data g_dji_feedback[DJI_MOTOR_ID_COUNT] = {0};
 Struct_DJI_Motor *dji_motor_can1map[DJI_MOTOR_ID_COUNT] = {NULL};
 Struct_DJI_Motor *dji_motor_can2map[DJI_MOTOR_ID_COUNT] = {NULL};
 Struct_DJI_Motor *dji_motor_can3map[DJI_MOTOR_ID_COUNT] = {NULL};
@@ -30,7 +29,7 @@ static void for_each_registered_motor(DJI_Motor_Map_Iterator callback) {
   }
 }
 
-uint8_t *allocate_tx_data(const FDCAN_HandleTypeDef *hcan,
+static uint8_t *allocate_tx_data(const FDCAN_HandleTypeDef *hcan,
                           enum Enum_Motor_DJI_ID can_id) {
   uint8_t *tx_data_ptr = NULL;
 

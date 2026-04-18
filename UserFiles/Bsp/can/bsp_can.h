@@ -4,7 +4,9 @@
 #include "fdcan.h"
 #include "main.h"
 #include "stm32h7xx_hal.h"
+#include <stdbool.h>
 #include <string.h>
+
 
 /**
  * @brief CAN通信接收回调函数数据类型
@@ -33,6 +35,7 @@ extern Struct_CAN_Manage_Object CAN1_Manage_Object;
 extern Struct_CAN_Manage_Object CAN2_Manage_Object;
 extern Struct_CAN_Manage_Object CAN3_Manage_Object;
 
+// DJI
 extern uint8_t CAN1_0x1fe_Tx_Data[];
 extern uint8_t CAN1_0x1ff_Tx_Data[];
 extern uint8_t CAN1_0x200_Tx_Data[];
@@ -41,6 +44,17 @@ extern uint8_t CAN1_0x2ff_Tx_Data[];
 extern uint8_t CAN1_0x3fe_Tx_Data[];
 extern uint8_t CAN1_0x4fe_Tx_Data[];
 
+// ZDT
+extern uint8_t CAN1_0x100_Tx_Data[];
+extern uint8_t CAN1_0x101_Tx_Data[];
+extern uint8_t CAN1_0x300_Tx_Data[];
+extern uint8_t CAN1_0x301_Tx_Data[];
+extern uint8_t CAN1_0x400_Tx_Data[];
+extern uint8_t CAN1_0x401_Tx_Data[];
+extern uint8_t CAN1_0x500_Tx_Data[];
+extern uint8_t CAN1_0x501_Tx_Data[];
+
+// DJI
 extern uint8_t CAN2_0x1fe_Tx_Data[];
 extern uint8_t CAN2_0x1ff_Tx_Data[];
 extern uint8_t CAN2_0x200_Tx_Data[];
@@ -49,6 +63,17 @@ extern uint8_t CAN2_0x2ff_Tx_Data[];
 extern uint8_t CAN2_0x3fe_Tx_Data[];
 extern uint8_t CAN2_0x4fe_Tx_Data[];
 
+// ZDT
+extern uint8_t CAN2_0x100_Tx_Data[];
+extern uint8_t CAN2_0x101_Tx_Data[];
+extern uint8_t CAN2_0x300_Tx_Data[];
+extern uint8_t CAN2_0x301_Tx_Data[];
+extern uint8_t CAN2_0x400_Tx_Data[];
+extern uint8_t CAN2_0x401_Tx_Data[];
+extern uint8_t CAN2_0x500_Tx_Data[];
+extern uint8_t CAN2_0x501_Tx_Data[];
+
+// DJI
 extern uint8_t CAN3_0x1fe_Tx_Data[];
 extern uint8_t CAN3_0x1ff_Tx_Data[];
 extern uint8_t CAN3_0x200_Tx_Data[];
@@ -57,11 +82,22 @@ extern uint8_t CAN3_0x2ff_Tx_Data[];
 extern uint8_t CAN3_0x3fe_Tx_Data[];
 extern uint8_t CAN3_0x4fe_Tx_Data[];
 
+// ZDT
+extern uint8_t CAN3_0x100_Tx_Data[];
+extern uint8_t CAN3_0x101_Tx_Data[];
+extern uint8_t CAN3_0x300_Tx_Data[];
+extern uint8_t CAN3_0x301_Tx_Data[];
+extern uint8_t CAN3_0x400_Tx_Data[];
+extern uint8_t CAN3_0x401_Tx_Data[];
+extern uint8_t CAN3_0x500_Tx_Data[];
+extern uint8_t CAN3_0x501_Tx_Data[];
+
 extern uint8_t CAN_Supercap_Tx_Data[];
 
-void CAN_Init(FDCAN_HandleTypeDef *hfdcan, CAN_Callback Callback_Function);
+void CAN_Init(FDCAN_HandleTypeDef *hfdcan, bool extid,
+              CAN_Callback Callback_Function);
 
-uint8_t CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint16_t ID,
+uint8_t CAN_Transmit_Data(FDCAN_HandleTypeDef *hfdcan, uint32_t ID, bool exid,
                           uint8_t *Data, uint16_t Length);
 
 void TIM_100us_CAN_PeriodElapsedCallback();

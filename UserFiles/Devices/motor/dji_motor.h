@@ -101,13 +101,9 @@ typedef struct Struct_DJI_Motor {
   float out;
 } Struct_DJI_Motor;
 
-extern Struct_Motor_DJI_CAN_Rx_Data g_dji_feedback[DJI_MOTOR_ID_COUNT];
 extern Struct_DJI_Motor *dji_motor_can1map[DJI_MOTOR_ID_COUNT];
 extern Struct_DJI_Motor *dji_motor_can2map[DJI_MOTOR_ID_COUNT];
 extern Struct_DJI_Motor *dji_motor_can3map[DJI_MOTOR_ID_COUNT];
-
-uint8_t *allocate_tx_data(const FDCAN_HandleTypeDef *hcan,
-                          enum Enum_Motor_DJI_ID can_id);
 
 void DJI_Motor_Init(Struct_DJI_Motor *motor, const FDCAN_HandleTypeDef *hcan,
                     enum Enum_Motor_DJI_ID can_id,

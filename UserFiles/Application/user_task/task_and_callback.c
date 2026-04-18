@@ -17,8 +17,47 @@ void CAN1_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
   }
 }
 
+void CAN2_Callback(FDCAN_RxHeaderTypeDef *Header, uint8_t *Buffer) {
+  uint8_t id;
+  uint8_t index;
+
+  if (Header == NULL || Buffer == NULL) {
+    return;
+  }
+  if (!init_finished) {
+    return;
+  }
+  if (Header->IdType != FDCAN_EXTENDED_ID) {
+    return;
+  }
+
+  id = (uint8_t)((Header->Identifier >> 8U) & 0xFFU);
+  switch (id) {
+  case 0x01:
+    index = 0U;
+    break;
+  case 0x03:
+    index = 1U;
+    break;
+  case 0x04:
+    index = 2U;
+    break;
+  case 0x05:
+    index = 3U;
+    break;
+  default:
+    return;
+  }
+
+  if (zdt_stepper_can2map[index] != NULL) {
+    ZDT_Stepper_CAN_RxCpltCallback(zdt_stepper_can2map[index]);
+  }
+}
+
 void Task_Init(void) {
-  CAN_Init(&hfdcan1, CAN1_Callback);
+  CAN_Init(&hfdcan1, false, CAN1_Callback);
+  CAN_Init(&hfdcan2, true, CAN2_Callback);
+
   USB_Init(NULL);
   INS_Init();
 
@@ -68,6 +107,7 @@ void Task1ms_Callback() {
   if (alive_tick >= 100U) {
     alive_tick = 0U;
     DJI_Motor_TIM_100ms_Alive_PeriodElapsedCallback(NULL);
+    // ZDT_Stepper_TIM_100ms_Alive_PeriodElapsedCallback(NULL);
   }
 
   BMI088_TIM_1ms_PeriodElapsedCallback();
